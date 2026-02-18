@@ -15,30 +15,30 @@ CORS(app)
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# 1. Image Preprocessing
+
 transform = A.Compose([
     A.Resize(512, 512),
     A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
     ToTensorV2(),
 ])
 
-# 2. Color Mapping (Sky moved to Index 10)
+
 
 COLOR_MAP = {
-    0: [0, 0, 0],         # Void/Background
-    1: [0, 255, 0],       # Dirt/Trees
-    2: [128, 128, 128],   # Grass/Rocks
-    3: [34, 139, 34],     # Scrub/Bushes
-    4: [189, 183, 107],   # Grass
-    5: [244, 164, 96],    # Path/Landscape
-    6: [255, 255, 255],   # Concrete/Obstacles
-    7: [139, 69, 19],     # Mud
-    8: [255, 0, 0],       # Obstacle/Fence
-    9: [70, 70, 70],      # Vehicle/Track
-    10: [135, 206, 235]   # SKY (Sky Blue)
+    0: [0, 0, 0],         
+    1: [0, 255, 0],      
+    2: [128, 128, 128],  
+    3: [34, 139, 34],     
+    4: [189, 183, 107],   
+    5: [244, 164, 96],   
+    6: [255, 255, 255],  
+    7: [139, 69, 19],    
+    8: [255, 0, 0],       
+    9: [70, 70, 70],      
+    10: [135, 206, 235]   
 }
 
-# 3. Model Initialization
+
 model = smp.DeepLabV3Plus(
     encoder_name="resnet34", 
     encoder_weights=None, 
@@ -57,31 +57,31 @@ def predict():
         image = Image.open(BytesIO(base64.b64decode(image_data))).convert("RGB")
         image_np = np.array(image)
         
-        # Get dimensions for resizing later
+        
         original_h, original_w = image_np.shape[:2]
         
-        # Prepare image for AI
+        
         input_tensor = transform(image=image_np)["image"].unsqueeze(0).to(DEVICE)
         
         with torch.no_grad():
             output = model(input_tensor)
             mask = torch.argmax(output, dim=1).squeeze(0).cpu().numpy()
 
-        # Resize mask back to match original image size
+        
         mask_resized = cv2.resize(mask.astype('uint8'), (original_w, original_h), interpolation=cv2.INTER_NEAREST)
 
-        # Create colored mask
+        
         mask_colored = np.zeros((original_h, original_w, 3), dtype=np.uint8)
         for class_idx, color in COLOR_MAP.items():
             mask_colored[mask_resized == class_idx] = color
 
-        # Catch-all for unknown classes (paints them Pink so you can see them)
+        
         mask_colored[np.where((mask_colored == [0,0,0]).all(axis=2) & (mask_resized > 0))] = [255, 0, 255]
 
-        # Optional: Print to console to see what classes were detected
+        
         print(f"Detected class indices: {np.unique(mask)}")
 
-        # Encode the result
+        
         _, buffer = cv2.imencode('.png', cv2.cvtColor(mask_colored, cv2.COLOR_RGB2BGR))
         mask_base64 = base64.b64encode(buffer).decode('utf-8')
         
