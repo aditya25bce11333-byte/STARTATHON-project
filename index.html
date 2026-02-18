@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Falcon Off-Road AI Dashboard</title>
     <style>
-        /* Base Styling */
+       
         :root {
             --primary: #00d2ff;
             --secondary: #3a7bd5;
@@ -224,7 +224,7 @@
             }
         };
 
-        // Handle Analysis
+       
         analyzeBtn.onclick = async function() {
             if (!imageLoader.files[0]) return alert("Please select an image first!");
 
@@ -238,7 +238,7 @@
                 const base64Image = reader.result;
 
                 try {
-                    // Using the full URL to reach the Flask server
+                   
                     const response = await fetch('http://127.0.0.1:5000/predict', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -268,7 +268,7 @@
             reader.readAsDataURL(file);
         };
 
-        // Handle Download
+       
         downloadBtn.onclick = function() {
             const link = document.createElement('a');
             link.href = outputImg.src;
@@ -279,4 +279,5 @@
         };
     </script>
 </body>
+
 </html>
